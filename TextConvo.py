@@ -27,6 +27,10 @@ def create_text_convo_img(texts):
 
 
 	# Setup
+	sender = [text[1] for text in texts]
+	texts = [text[0
+	] for text in texts]
+	
 	bubble_width = bubble_ratio * image_width
 	text_width = bubble_width - text_margin_l - text_margin_r
 
@@ -38,36 +42,58 @@ def create_text_convo_img(texts):
 
 	texts = ['\n'.join(textwrap.wrap(text, line_len)) for text in texts]
 
+	bubble_heights = [
+		text_margin_t + font.getsize_multiline(text)[1] + text_margin_d + bubble_margin
+		for text in texts
+	]
+	bubble_heights = [image_margin] + bubble_heights
+	total_text_height = sum(bubble_heights)
+	bubble_heights = list(np.cumsum(bubble_heights))
 
-	img = Image.new('RGB', (image_width, image_height), color=back_color)
+
+	img = Image.new('RGB', (image_width, total_text_height), color=back_color)
 	write_obj = ImageDraw.Draw(img)
 	
-	height_cursor = image_margin
-	for text in texts:
+	for i, (s, text) in enumerate(zip(sender, texts)):
 		text_size = font.getsize_multiline(text)
 	
-		rect_tl = (image_margin, height_cursor)
-		rect_dr = (
-			rect_tl[0] + text_margin_l + text_size[0] + text_margin_r,
-			rect_tl[1] + text_margin_t + text_size[1] + text_margin_d
-		)
-		write_obj.rounded_rectangle([rect_tl, rect_dr], radius=bubble_corner_radius, fill=other_bubble_color)
-	
+		if s % 2 == 0:
+			bubble_color = self_bubble_color
+			
+			right_edge = image_width - image_margin
+			rect_upper = (
+				right_edge - text_margin_l - text_size[0] - text_margin_r,
+				bubble_heights[i]
+			)
+			rect_lower = (
+				right_edge,
+				bubble_heights[i+1] - bubble_margin
+			)
+		else:
+			bubble_color = other_bubble_color
+			
+			rect_upper = (image_margin, bubble_heights[i])
+			rect_lower = (
+				rect_upper[0] + text_margin_l + text_size[0] + text_margin_r,
+				bubble_heights[i+1] - bubble_margin
+			)
+
 		text_anchor = (
-			rect_tl[0] + text_margin_l,
-			height_cursor + text_margin_t
+			rect_upper[0] + text_margin_l,
+			bubble_heights[i] + text_margin_t
 		)
+		
+		write_obj.rounded_rectangle([rect_upper, rect_lower], radius=bubble_corner_radius, fill=bubble_color)
 		write_obj.text(text_anchor, text, font=font, color=text_color)
 		
-		height_cursor = rect_dr[1] + bubble_margin
-		
-	img.save('test.png')
+	return img, bubble_heights
 
 
 if __name__ == "__main__":
 	texts = [
-		"This is the first text",
-		"This is the reply",
-		"This is a very long text that runs on and on and on without step, it's very annoying but I gotta hit the quota somehow"
+		("This is the first text", 0),
+		("This is the reply", 1),
+		("This is a very long text that runs on and on and on without step, it's very annoying but I gotta hit the quota somehow", 0)
 	]
-	create_text_convo_img(texts)
+
+	create_text_convo_img(texts)[0].save('test.png')
