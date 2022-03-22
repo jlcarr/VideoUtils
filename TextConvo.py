@@ -106,7 +106,7 @@ def construct_texting_frame(template, texts_img, texts_height):
 	
 
 def create_text_convo_scene(texts, name="",timing=1):
-	# Setup
+	# Setup Video
 	if not isinstance(timing, list):
 		timing = [timing] * (len(texts)+1)
 	
@@ -125,15 +125,22 @@ def create_text_convo_scene(texts, name="",timing=1):
 			return np.array(construct_texting_frame(template, texts_img, int(height_diff * t + height)))[:,:,:-1]
 		return result
 		
+	# Setup Audio
+	sent_audio = moviepy.editor.AudioFileClip('text_sent.mp3')
+	received_audio = moviepy.editor.AudioFileClip('text_received.mp3')
+	audio = [sent_audio, received_audio]
+		
 	# Main loop
 	clip_list = []
 	for i, (height, t) in enumerate(zip(bubble_heights, timing)):
 		img = construct_texting_frame(template, texts_img, height)
-		clip_list.append(moviepy.editor.ImageClip(np.array(img), duration=t))
+		clip_list.append(moviepy.editor.ImageClip(np.array(img)[:,:,:-1], duration=t))
 		if i < len(texts):
 			duration = 0.125
 			height_diff = (bubble_heights[i+1] - height)/duration
-			clip_list.append(moviepy.editor.VideoClip(make_frame=frame_maker(height_diff,height), duration=duration))
+			clip = moviepy.editor.VideoClip(make_frame=frame_maker(height_diff,height), duration=duration)
+			clip.audio = audio[texts[i][1]]
+			clip_list.append(clip)
 	
 	video = moviepy.editor.concatenate_videoclips(clip_list, method='compose')
 	return video
@@ -147,5 +154,5 @@ if __name__ == "__main__":
 	]
 	#create_text_convo_img(texts)[0].save('test.png')
 	video = create_text_convo_scene(texts, name="Buddy", timing=2)
-	video.write_videofile('test.mp4', fps=60, audio_codec='aac', threads=0, preset='slow')
+	video.write_videofile('test.mp4', fps=60, threads=0, preset='slow')
 	#video.write_videofile('test.mp4', fps=24, audio_codec='aac', threads=0, preset='ultrafast', ffmpeg_params=['-crf', '32'])

@@ -134,3 +134,7 @@ dmypy.json
 *.png
 *.xcf
 *.mp4
+*.mp3
+*.webm
+*.aif
+*.aiff
