@@ -10,9 +10,10 @@ import textwrap
 # Global setup
 texting_template = Image.open('texting_template.png')
 bbox = [(22,70), (275,337)]
-texting_base = Image.new('RGBA', texting_template.size, color=(0,0,0,0))
-texting_base_write = ImageDraw.Draw(texting_base)
-texting_base_write.rectangle(bbox, fill='white')
+texting_base = Image.new('RGBA', texting_template.size, color=(255,255,255,255))
+#texting_base = Image.new('RGBA', texting_template.size, color=(0,0,0,0))
+#texting_base_write = ImageDraw.Draw(texting_base)
+#texting_base_write.rectangle(bbox, fill='white')
 
 
 def create_text_convo_img(texts):
@@ -105,7 +106,7 @@ def construct_texting_frame(template, texts_img, texts_height):
 	return img
 	
 
-def create_text_convo_scene(texts, name="",timing=1):
+def create_text_convo_scene(texts, name="",timing=1, resolution=(720, 1280)):
 	# Setup Video
 	if not isinstance(timing, list):
 		timing = [timing] * (len(texts)+1)
@@ -143,6 +144,10 @@ def create_text_convo_scene(texts, name="",timing=1):
 			clip_list.append(clip)
 	
 	video = moviepy.editor.concatenate_videoclips(clip_list, method='compose')
+	h_margin = (resolution[1] - texting_base.size[0])//2
+	v_margin = (resolution[0] - texting_base.size[1])//2
+	video = video.margin(left=h_margin, right=h_margin, top=v_margin, bottom=v_margin, color=(255,255,255))
+	
 	return video
 
 
