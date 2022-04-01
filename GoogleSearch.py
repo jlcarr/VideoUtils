@@ -27,6 +27,20 @@ def create_search_img(text):
 	return img
 
 
+def create_search_scene(text, timing=0.05, resolution=(720, 1280)):
+	# Main loop
+	clip_list = []
+	for i in range(len(text)+1):
+		img = create_search_img(text[:i])
+		clip_list.append(moviepy.editor.ImageClip(np.array(img)[:,:,:-1], duration=timing))
+		
+	video = moviepy.editor.concatenate_videoclips(clip_list, method='compose')
+
+	return video
+
 
 if __name__ == "__main__":
-	create_search_img("How to make videos?").save('test.png')
+	#create_search_img("How to make videos?").save('test.png')
+
+	video = create_search_scene("How to make videos?")
+	video.write_videofile('test.mp4', fps=60, threads=0, preset='slow')
