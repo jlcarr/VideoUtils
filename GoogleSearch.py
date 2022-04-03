@@ -35,6 +35,10 @@ def create_search_scene(text, timing=0.05, resolution=(720, 1280)):
 		clip_list.append(moviepy.editor.ImageClip(np.array(img)[:,:,:-1], duration=timing))
 		
 	video = moviepy.editor.concatenate_videoclips(clip_list, method='compose')
+	
+	search_audio = moviepy.editor.AudioFileClip('typing.mp3')
+	search_audio = moviepy.editor.afx.audio_loop(search_audio, duration=video.duration)
+	video.audio = search_audio
 
 	return video
 
