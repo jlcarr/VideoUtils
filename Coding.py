@@ -34,7 +34,7 @@ class VideoFormatter(pygments.formatters.ImageFormatter):
 			im.save(outfile, self.image_format.upper())
 		
 
-def create_coding_scene(code, name="", timing=0.1, resolution=(1280, 720)):
+def create_coding_scene(code, name="", fps=10, duration=None, resolution=(1280, 720)):
 	lexer = pygments.lexers.PythonLexer()
 	tokens = list(pygments.lex(code, lexer))
 	fin = [tokens[-1]]
@@ -44,7 +44,7 @@ def create_coding_scene(code, name="", timing=0.1, resolution=(1280, 720)):
 	img = Image.new('RGB', resolution, color=formatter.background_color)
 	formatter._paint_line_number_bg(img)
 	
-	clip_list = []
+	img_list = []
 	used_tokens = []
 	for i,token in enumerate(tokens):
 		print(f"Processing up to token {i}")
@@ -52,14 +52,16 @@ def create_coding_scene(code, name="", timing=0.1, resolution=(1280, 720)):
 		new_img = pygments.format(used_tokens + fin, formatter)
 		new_img = Image.open(io.BytesIO(new_img))
 		img.paste(new_img)
-		clip_list.append(moviepy.editor.ImageClip(np.array(img), duration=timing))
+		img_list.append(np.array(img))
 		
 		if formatter._get_image_size(formatter.maxlinelength, formatter.maxlineno-2)[-1] > img.size[-1]:
 			break
 			
 		used_tokens.append(token)
 
-	video = moviepy.editor.concatenate_videoclips(clip_list, method='compose')
+	if duration is not None:
+		fps = len(img_list)/duration
+	video = moviepy.editor.ImageSequenceClip(img_list, fps=fps)
 	
 	return video
 	
